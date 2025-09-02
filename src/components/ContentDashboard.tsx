@@ -1,32 +1,90 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { contentScheduleData } from "@/data/contentSchedule";
 import { VideoContent } from "@/types/contentSchedule";
 import { ContentDetailModal } from "./ContentDetailModal";
 import { VideoScheduleRow } from "./VideoScheduleRow";
 import { exportToExcel, exportDentistSchedule } from "@/utils/excelExport";
+import { VideoService } from "@/services/videoService";
 import { Calendar, Users, Video, CheckCircle2, Clock, Target, Download, FileSpreadsheet, User, Play, Check } from "lucide-react";
 
 export const ContentDashboard = () => {
-  const [videos, setVideos] = useState<VideoContent[]>(contentScheduleData);
+  const [videos, setVideos] = useState<VideoContent[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<VideoContent | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load videos from Supabase on component mount
+  useEffect(() => {
+    const loadVideos = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Initialize database if needed
+        await VideoService.initializeDatabase();
+        
+        // Load videos
+        const videosData = await VideoService.getAllVideos();
+        setVideos(videosData);
+      } catch (err) {
+        console.error('Error loading videos:', err);
+        setError('Failed to load video schedule. Please refresh the page.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadVideos();
+
+    // Subscribe to real-time updates
+    const subscription = VideoService.subscribeToChanges((updatedVideos) => {
+      setVideos(updatedVideos);
+    });
+
+    // Cleanup subscription on unmount
+    return () => {
+      VideoService.unsubscribe(subscription);
+    };
+  }, []);
 
   const handleViewDetails = (video: VideoContent) => {
     setSelectedVideo(video);
     setIsModalOpen(true);
   };
 
-  const handleToggleComplete = (videoId: string) => {
-    setVideos(prev =>
-      prev.map(video =>
-        video.id === videoId
-          ? { ...video, completed: !video.completed }
-          : video
-      )
-    );
+  const handleToggleComplete = async (videoId: string) => {
+    try {
+      const video = videos.find(v => v.id === videoId);
+      if (!video) return;
+
+      const newCompletedStatus = !video.completed;
+      
+      // Optimistically update UI
+      setVideos(prev =>
+        prev.map(v =>
+          v.id === videoId
+            ? { ...v, completed: newCompletedStatus }
+            : v
+        )
+      );
+
+      // Update in database
+      await VideoService.updateVideoCompletion(videoId, newCompletedStatus);
+    } catch (err) {
+      console.error('Error updating video completion:', err);
+      
+      // Revert optimistic update on error
+      setVideos(prev =>
+        prev.map(v =>
+          v.id === videoId
+            ? { ...v, completed: !v.completed }
+            : v
+        )
+      );
+    }
   };
 
   const handleExportAll = () => {
@@ -65,6 +123,42 @@ export const ContentDashboard = () => {
 
   const nourinCompleted = nourinVideos.filter(v => v.completed).length;
   const parisaCompleted = parisaVideos.filter(v => v.completed).length;
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background p-3 sm:p-6 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-gradient-green flex items-center justify-center shadow-glow mx-auto animate-pulse">
+            <Calendar className="w-8 h-8 text-white" />
+          </div>
+          <p className="text-xl text-bright-green">Loading dental content schedule...</p>
+          <p className="text-sm text-muted-foreground">Connecting to database</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background p-3 sm:p-6 flex items-center justify-center">
+        <div className="text-center space-y-4 max-w-md">
+          <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mx-auto">
+            <Calendar className="w-8 h-8 text-red-500" />
+          </div>
+          <p className="text-xl text-red-500">Failed to Load Schedule</p>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="bg-bright-green hover:bg-bright-green/80"
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-3 sm:p-6">
