@@ -7,7 +7,7 @@ import { VideoContent } from "@/types/contentSchedule";
 import { ContentDetailModal } from "./ContentDetailModal";
 import { VideoScheduleRow } from "./VideoScheduleRow";
 import { exportToExcel, exportDentistSchedule } from "@/utils/excelExport";
-import { Calendar, Users, Video, CheckCircle2, Clock, Target, Download, FileSpreadsheet } from "lucide-react";
+import { Calendar, Users, Video, CheckCircle2, Clock, Target, Download, FileSpreadsheet, User, Play, Check } from "lucide-react";
 
 export const ContentDashboard = () => {
   const [videos, setVideos] = useState<VideoContent[]>(contentScheduleData);
@@ -67,47 +67,51 @@ export const ContentDashboard = () => {
   const parisaCompleted = parisaVideos.filter(v => v.completed).length;
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background p-3 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-gradient-green flex items-center justify-center shadow-glow">
-              <Calendar className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-green flex items-center justify-center shadow-glow">
+              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <h1 className="text-4xl font-bold text-bright-green">Dental Content Schedule</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-bright-green">Dental Content Schedule</h1>
           </div>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            3-Week Video Production Dashboard • 2 Dentists • Every 3 Days • 1-2 Minute Videos
+          <p className="text-sm sm:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
+            <span className="hidden sm:inline">3-Week Video Production Dashboard • 2 Dentists • Every 3 Days • 1-2 Minute Videos</span>
+            <span className="sm:hidden">Video Production Dashboard<br/>2 Dentists • 3 Weeks • Every 3 Days</span>
           </p>
         </div>
 
         {/* Export Buttons */}
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 px-4">
           <Button
             onClick={handleExportAll}
-            className="bg-gradient-green hover:bg-bright-green/80 text-white shadow-glow transition-all duration-300 flex items-center gap-2"
+            className="w-full sm:w-auto bg-gradient-green hover:bg-bright-green/80 text-white shadow-glow transition-all duration-300 flex items-center justify-center gap-2 py-3"
           >
             <FileSpreadsheet className="w-5 h-5" />
-            Export Complete Schedule to Excel
+            <span className="hidden sm:inline">Export Complete Schedule to Excel</span>
+            <span className="sm:hidden">Export Complete Schedule</span>
           </Button>
           
           <Button
             onClick={handleExportNourine}
             variant="outline"
-            className="border-accent/30 text-accent hover:bg-accent/10 hover:border-accent/50 transition-all duration-300 flex items-center gap-2"
+            className="w-full sm:w-auto border-accent/30 text-accent hover:bg-accent/10 hover:border-accent/50 transition-all duration-300 flex items-center justify-center gap-2 py-3"
           >
             <Download className="w-4 h-4" />
-            Export Dr. Nourine's Schedule
+            <span className="hidden sm:inline">Export Dr. Nourine's Schedule</span>
+            <span className="sm:hidden">Dr. Nourine's Schedule</span>
           </Button>
           
           <Button
             onClick={handleExportParisa}
             variant="outline"
-            className="border-lime-green/30 text-lime-green hover:bg-lime-green/10 hover:border-lime-green/50 transition-all duration-300 flex items-center gap-2"
+            className="w-full sm:w-auto border-lime-green/30 text-lime-green hover:bg-lime-green/10 hover:border-lime-green/50 transition-all duration-300 flex items-center justify-center gap-2 py-3"
           >
             <Download className="w-4 h-4" />
-            Export Dr. Parisa's Schedule
+            <span className="hidden sm:inline">Export Dr. Parisa's Schedule</span>
+            <span className="sm:hidden">Dr. Parisa's Schedule</span>
           </Button>
         </div>
 
@@ -204,7 +208,8 @@ export const ContentDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead className="border-b border-border bg-darker-surface">
                   <tr>
@@ -226,6 +231,70 @@ export const ContentDashboard = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-4 p-4">
+              {videos.map((video) => (
+                <Card key={video.id} className={`border-border bg-darker-surface ${video.completed ? 'bg-success/5' : ''}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-green flex items-center justify-center shadow-glow">
+                          <span className="text-white font-bold text-sm">{video.day}</span>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-foreground">{video.date}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <User className={`w-4 h-4 ${video.dentist.includes("Nourine") ? "text-accent" : "text-lime-green"}`} />
+                            <span className="text-sm font-medium text-foreground">{video.dentist}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground font-medium">{video.duration}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mb-4">
+                      <h3 className="font-semibold text-foreground mb-2">{video.topic}</h3>
+                      <Badge 
+                        variant="outline" 
+                        className="text-xs border-bright-green/30 text-bright-green bg-bright-green/10"
+                      >
+                        {video.contentType}
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewDetails(video)}
+                        className="flex-1 hover:bg-bright-green/10 hover:border-bright-green/30 hover:text-bright-green transition-all"
+                      >
+                        <Play className="w-4 h-4 mr-2" />
+                        View Script
+                      </Button>
+                      
+                      <Button
+                        variant={video.completed ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleToggleComplete(video.id)}
+                        className={`flex-1 transition-all duration-200 ${
+                          video.completed
+                            ? "bg-success hover:bg-success/80 text-success-foreground shadow-glow"
+                            : "hover:bg-success/10 hover:border-success/30 hover:text-success"
+                        }`}
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        {video.completed ? "Completed" : "Mark Done"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </CardContent>
         </Card>

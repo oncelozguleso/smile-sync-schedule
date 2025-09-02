@@ -15,7 +15,7 @@ export const ContentDetailModal = ({ video, isOpen, onClose }: ContentDetailModa
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-dark-surface border-border shadow-dark">
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto bg-dark-surface border-border shadow-dark">
         <DialogHeader className="pb-6">
           <DialogTitle className="text-2xl font-semibold text-bright-green flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-gradient-green flex items-center justify-center shadow-glow">
@@ -27,7 +27,7 @@ export const ContentDetailModal = ({ video, isOpen, onClose }: ContentDetailModa
 
         <div className="space-y-6">
           {/* Video Details Header */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="border-bright-green/20 shadow-dark bg-darker-surface">
               <CardContent className="p-4 flex items-center gap-3">
                 <User className="w-5 h-5 text-bright-green" />
